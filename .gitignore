@@ -20,3 +20,12 @@ coverage
 coverage.*
 .idea
 api/assets.go
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Copilot task tracking files
+copilot_tasks.json
+copilot_monitor_report.json
