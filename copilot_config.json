@@ -1,0 +1,38 @@
+{
+  "github": {
+    "default_repo_owner": "ricardoaoki",
+    "default_repo_name": "PhoneInfoga",
+    "api_base_url": "https://api.github.com"
+  },
+  "task_identification": {
+    "scan_files": ["phoneinfoga.py", "main.go"],
+    "issue_types": {
+      "syntax_warning": {
+        "priority": "medium",
+        "patterns": ["invalid escape sequence", "SyntaxWarning"]
+      },
+      "todo": {
+        "priority": "low", 
+        "patterns": ["TODO", "FIXME", "XXX"]
+      },
+      "error_handling": {
+        "priority": "high",
+        "patterns": ["except:", "bare except"]
+      },
+      "code_quality": {
+        "priority": "medium",
+        "patterns": ["code smell", "duplicate code"]
+      }
+    }
+  },
+  "monitoring": {
+    "check_interval_minutes": 30,
+    "max_retries": 3,
+    "timeout_seconds": 30
+  },
+  "labels": {
+    "copilot_task": "copilot-task",
+    "priority_prefix": "priority-",
+    "type_prefix": "type-"
+  }
+}
