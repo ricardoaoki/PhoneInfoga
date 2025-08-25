@@ -1,0 +1,7 @@
+{
+  "check_interval_minutes": 30,
+  "auto_delegate_new_tasks": false,
+  "notification_webhook": null,
+  "max_monitoring_hours": 24,
+  "report_file": "copilot_monitor_report.json"
+}

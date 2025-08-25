@@ -54,6 +54,9 @@ parser.add_argument('--osint', action='store_true',
 parser.add_argument('-u', '--update', action='store_true',
                     help='Update the project')
 
+parser.add_argument('--copilot', choices=['delegate', 'monitor', 'list', 'demo'],
+                    help='GitHub Copilot task management (delegate, monitor, list, demo)')
+
 args = parser.parse_args()
 
 def resetColors():
@@ -89,12 +92,75 @@ except:
     sys.exit()
 
 requests.packages.urllib3.disable_warnings()
-requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
+try:
+    requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
+except AttributeError:
+    # newer urllib3 versions don't have this attribute
+    pass
 try:
     requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST += 'HIGH:!DH:!aNULL'
 except AttributeError:
     # no pyopenssl support used / needed / available
     pass
+
+# GitHub Copilot agent integration
+if args.copilot:
+    try:
+        from copilot_agent import GitHubCopilotAgent
+        import os
+        
+        if args.copilot == "demo":
+            # Demo mode - show what tasks would be delegated without GitHub API
+            print('\033[92m[*] Demo mode: Showing tasks that would be delegated to GitHub Copilot...\n')
+            agent = GitHubCopilotAgent("ricardoaoki", "PhoneInfoga", "dummy_token")
+            issues = agent.identify_code_issues()
+            
+            if issues:
+                print(f'\033[93m[!] Found {len(issues)} tasks that could be delegated:\n')
+                for i, issue in enumerate(issues[:10], 1):  # Show first 10
+                    print(f"{i}. \033[96m{issue['type'].upper()}\033[0m (Priority: {issue['priority']})")
+                    print(f"   📁 {issue['file']}:{issue['line']}")
+                    print(f"   📋 {issue['description']}")
+                    print(f"   💻 {issue['code_snippet'][:60]}...")
+                    print()
+                
+                if len(issues) > 10:
+                    print(f"   ... and {len(issues) - 10} more tasks")
+                
+                print(f"\n\033[92m[+] To actually delegate these tasks, use: python3 phoneinfoga.py --copilot delegate")
+                print(f"\033[93m[!] Note: Requires GITHUB_TOKEN environment variable to be set\033[0m")
+            else:
+                print('\033[92m[+] No issues found that need delegation.')
+            
+            sys.exit()
+        
+        github_token = os.getenv("GITHUB_TOKEN")
+        if not github_token:
+            print('\033[91m[!] GitHub token required for Copilot agent. Set GITHUB_TOKEN environment variable.')
+            sys.exit()
+        
+        agent = GitHubCopilotAgent("ricardoaoki", "PhoneInfoga", github_token)
+        
+        if args.copilot == "delegate":
+            print('\033[92m[*] Starting task delegation to GitHub Copilot...')
+            delegated = agent.delegate_tasks()
+            if delegated:
+                print('\033[92m[+] Successfully delegated {} tasks to GitHub Copilot!'.format(len(delegated)))
+            else:
+                print('\033[93m[!] No new tasks to delegate.')
+        elif args.copilot == "monitor":
+            agent.monitor_progress()
+        elif args.copilot == "list":
+            agent.list_tasks()
+        
+        sys.exit()
+        
+    except ImportError:
+        print('\033[91m[!] Copilot agent module not found. Ensure copilot_agent.py is available.')
+        sys.exit()
+    except Exception as e:
+        print('\033[91m[!] Error with Copilot agent: {}'.format(e))
+        sys.exit()
 
 if args.update:
     def download_file(url, target_path):
